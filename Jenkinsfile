@@ -8,7 +8,7 @@ node {
 
     }   
 
-    stage('Lint Dockerfile') {
+    stage('Linting') {
       
         docker.image('hadolint/hadolint:latest-debian').inside() {
                             sh 'hadolint ./Dockerfile | tee -a hadolint_lint.txt'
@@ -34,16 +34,13 @@ node {
             } 
         
     }
-    // stage('Scan Dockerfile to find vulnerabilities') {
-        
-    //     aquaMicroscanner imageName: "omaroovee/inmemorydb:latest", notCompliesCmd: 'exit 4', onDisallowed: 'fail', outputFormat: 'html'
-    
-    // }
-    stage('Testing The Application') {
-        app.inside {
-                  sh 'make test'
-        }
+
+    stage('Build Docker Container') {
+
+        sh 'docker run --name inmemorydb -d -p 80:80 omaroovee/inmemorydb:latest'
     }
+
+
     stage('Deploying to EKS') {
         app.inside {
                 echo "Tests passed"
