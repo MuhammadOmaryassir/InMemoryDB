@@ -1,7 +1,6 @@
 node {
     def app 
    
-
     stage('Clone repository') {
         /* Cloning the Repository to our Workspace */
             checkout scm
@@ -35,16 +34,19 @@ node {
         
     }
 
-    stage('Build Docker Container') {
-
-        sh 'docker run --name inmemorydb -d -p 80:80 omaroovee/inmemorydb:latest'
-    }
-
-
     stage('Deploying to EKS') {
-        app.inside {
-                echo "Tests passed"
-       }
+        echo 'Deploying to AWS...'
+        dir ('./') {
+            withAWS(credentials: 'aws-credentials', region: 'us-east-1') {
+                sh "aws eks --region us-east-1 update-kubeconfig --name CapstoneEKS-wY7ZsmYpwW91"
+                sh "kubectl apply -f aws/aws-auth-cm.yaml"
+                sh "kubectl set image deployments/capstone-app capstone-app=omaroovee/inmemorydb:latest"
+                sh "kubectl apply -f aws/capstone-app-deployment.yml"
+                sh "kubectl get nodes"
+                sh "kubectl get pods"
+                sh "aws cloudformation update-stack --stack-name udacity-capstone-nodes --template-body file://aws/worker_nodes.yml --parameters file://aws/worker_nodes_parameters.json --capabilities CAPABILITY_IAM"
+            }
+        }
     }
     stage("Cleaning Docker up") {
       
