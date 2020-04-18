@@ -38,13 +38,11 @@ node {
         echo 'Deploying to AWS...'
         dir ('./') {
             withAWS(credentials: 'aws-credentials', region: 'us-east-1') {
-                sh "aws eks --region us-east-1 update-kubeconfig --name CapstoneEKS-wY7ZsmYpwW91"
+                sh "aws eks --region us-east-1 update-kubeconfig --name udacity-capstone-EKS-Cluster"
                 sh "kubectl apply -f aws/aws-auth-cm.yaml"
-                sh "kubectl set image deployments/capstone-app capstone-app=omaroovee/inmemorydb:latest"
                 sh "kubectl apply -f aws/capstone-app-deployment.yml"
                 sh "kubectl get nodes"
                 sh "kubectl get pods"
-                sh "aws cloudformation update-stack --stack-name udacity-capstone-nodes --template-body file://aws/worker_nodes.yml --parameters file://aws/worker_nodes_parameters.json --capabilities CAPABILITY_IAM"
             }
         }
     }
