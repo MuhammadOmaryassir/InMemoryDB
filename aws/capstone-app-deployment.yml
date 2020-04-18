@@ -1,29 +1,62 @@
-apiVersion: apps/v1
+apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: capstone-app
+  name: capstone-inmemorydb
   labels:
-    app: capstone-app
-  namespace: default
+    app: capstone-inmemorydb
 spec:
-  replicas: 3
   selector:
     matchLabels:
-      app: capstone-app
+      app: capstone-inmemorydb
   strategy:
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
     type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  progressDeadlineSeconds: 1200
+  minReadySeconds: 60
   template:
     metadata:
       labels:
-        app: capstone-app
+        app: capstone-inmemorydb
     spec:
+      terminationGracePeriodSeconds: 60
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: "app"
+                operator: In
+                values:
+                - capstone-inmemorydb
+              - key: "temporary"
+                operator: In
+                values:
+                - "true"
+            topologyKey: "kubernetes.io/hostname"
       containers:
-      - image: omaroovee/inmemorydb:latest
+      - name: udacity
+        image: omaroovee/inmemorydb
+        command: ["make","dev"]
         imagePullPolicy: Always
-        name: inmemorydb
+        resources:
+          limits:
+            memory: 64Mi
+            cpu: 250m
+          requests:
+            memory: 32Mi
+            cpu: 200m
         ports:
-        - containerPort: 80
-          protocol: TCP
+        - containerPort: 8080
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /memory
+            scheme: HTTP
+            port: 8080
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 2
+          timeoutSeconds: 1
+

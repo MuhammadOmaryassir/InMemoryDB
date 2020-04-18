@@ -5,8 +5,12 @@ metadata:
   namespace: kube-system
 data:
   mapRoles: |
-    - rolearn: arn:aws:iam::377104509325: role/udacity-capstone-nodes-InstanceRole-21RP1HKHBVX5
+    - rolearn: arn:aws:iam::377104509325:role/udacity-capstone-EKS-Cluster-Role
       username: system:node:{{EC2PrivateDNSName}}
       groups:
         - system:bootstrappers
         - system:nodes
+    - rolearn: arn:aws:iam::377104509325:user/Omaroovee
+      username: Omaroovee
+      groups:
+        - system:masters
